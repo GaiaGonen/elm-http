@@ -37,8 +37,8 @@ type Msg
   = MorePlease
   | NewGif (Result Http.Error String)
 
-update :
-update msg model = Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
   case msg of
     MorePlease ->
       ( model
