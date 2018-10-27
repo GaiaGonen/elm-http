@@ -45,17 +45,17 @@ update msg model =
       , getRandomGif model.topic
       )
 
-      NewGif result ->
-        case result of
-          Ok newUrl ->
-            ( { model | url = newUrl }
-            , Cmd.none
-            )
+    NewGif result ->
+      case result of
+        Ok newUrl ->
+          ( { model | url = newUrl }
+          , Cmd.none
+          )
 
-          Err ->
-            ( model
-            , Cmd.none
-            )
+        Err _ ->
+          ( model
+          , Cmd.none
+          )
 
 --SUBSCRIPTIONS
 
