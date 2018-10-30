@@ -22,11 +22,12 @@ main =
 type alias Model =
   { topic : String
   , url : String
+  , errorMessage : Maybe Http.Error
   }
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model "cat" "waiting.gif"
+  ( Model "cat" "waiting.gif" Nothing
   , getRandomGif "cat"
   )
 
@@ -52,8 +53,8 @@ update msg model =
           , Cmd.none
           )
 
-        Err _ ->
-          ( model
+        Err error ->
+          ( { model | errorMessage = Just error }
           , Cmd.none
           )
 
@@ -71,7 +72,11 @@ view model =
     [ h2 [] [ text model.topic ]
     , button [ onClick MorePlease ] [ text "More Please!" ]
     , br [] []
-    , img [ src model.url ] []
+    , case model.errorMessage of
+        Just error ->
+          div [] [ text <| errorToString error ]
+        Nothing ->
+          img [ src model.url ] []
     ]
 
 -- HTTP
@@ -90,3 +95,17 @@ toGiphyUrl topic =
 gifDecoder : Decode.Decoder String
 gifDecoder =
   Decode.field "data" (Decode.field "image_url" Decode.string)
+
+errorToString : Http.Error -> String
+errorToString error =
+  case error of
+    Http.Timeout ->
+      "Connection timed out"
+    Http.NetworkError ->
+      "A network error has occured"
+    Http.BadPayload badpayload response ->
+      badpayload
+    Http.BadUrl url ->
+      url
+    Http.BadStatus response ->
+      response.status.message
