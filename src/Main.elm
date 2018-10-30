@@ -37,6 +37,7 @@ init _ =
 type Msg
   = MorePlease
   | NewGif (Result Http.Error String)
+  | ChangeTopic String
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -58,6 +59,11 @@ update msg model =
           , Cmd.none
           )
 
+    ChangeTopic newTopic ->
+      ( { model | topic = newTopic }
+      , Cmd.none
+      )
+
 --SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
@@ -77,6 +83,9 @@ view model =
           div [] [ text <| errorToString error ]
         Nothing ->
           img [ src model.url ] []
+    , br [] []
+    , label [ for "topic" ] [ text "change topic:" ]
+    , input [ type_ "text", id "topic", placeholder "cat", value model.topic, onInput ChangeTopic] []
     ]
 
 -- HTTP
