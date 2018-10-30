@@ -22,12 +22,13 @@ main =
 type alias Model =
   { topic : String
   , url : String
+  , title : String
   , errorMessage : Maybe Http.Error
   }
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model "cat" "waiting.gif" Nothing
+  ( Model "cat" "waiting.gif" "Waiting Cat" Nothing
   , getRandomGif "cat"
   )
 
@@ -36,7 +37,7 @@ init _ =
 
 type Msg
   = MorePlease
-  | NewGif (Result Http.Error String)
+  | NewGif (Result Http.Error Gif)
   | ChangeTopic String
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -49,8 +50,8 @@ update msg model =
 
     NewGif result ->
       case result of
-        Ok newUrl ->
-          ( { model | url = newUrl }
+        Ok newGif ->
+          ( { model | url = newGif.url, title = newGif.title}
           , Cmd.none
           )
 
@@ -82,13 +83,19 @@ view model =
         Just error ->
           div [] [ text <| errorToString error ]
         Nothing ->
-          img [ src model.url ] []
+          h4 [] [text model.title]
+          , img [ src model.url ] []
     , br [] []
     , label [ for "topic" ] [ text "change topic:" ]
     , input [ type_ "text", id "topic", placeholder "cat", value model.topic, onInput ChangeTopic] []
     ]
 
 -- HTTP
+
+type alias Gif =
+  { url : String
+  , title : String
+  }
 
 getRandomGif : String -> Cmd Msg
 getRandomGif topic =
@@ -101,9 +108,15 @@ toGiphyUrl topic =
     , Url.string "tag" topic
     ]
 
-gifDecoder : Decode.Decoder String
+gifDecoder : Decode.Decoder Gif
 gifDecoder =
-  Decode.field "data" (Decode.field "image_url" Decode.string)
+  Decode.map2 Gif
+    (Decode.field "data" (Decode.field "image_url" Decode.string))
+    (Decode.field "data" (Decode.field "title" Decode.string))
+
+titleDecoder : Decode.Decoder String
+titleDecoder =
+  Decode.field "data" (Decode.field "title" Decode.string)
 
 errorToString : Http.Error -> String
 errorToString error =
